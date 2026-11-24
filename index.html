@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우리 동네 칠곡 생활정보 안내</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root {
+      --bg-cream: #FFFDF7;
+      --bg-soft-green: #EDF8F1;
+      --bg-sky: #EAF5FC;
+      --surface: #FFFFFF;
+      --surface-warm: #FFF9EC;
+      --border: #D7E5DC;
+      --text-main: #1F2937;
+      --text-sub: #4B5563;
+
+      --cat-med: #E95D88;
+      --cat-med-bg: #FFF0F5;
+      --cat-med-border: #F8BDD0;
+
+      --cat-trans: #2575D8;
+      --cat-trans-bg: #EEF6FF;
+      --cat-trans-border: #B8D7FA;
+
+      --cat-shop: #D4930A;
+      --cat-shop-bg: #FFF9E3;
+      --cat-shop-border: #F5DC8B;
+
+      --cat-edu: #7E57C2;
+      --cat-edu-bg: #F5F0FF;
+      --cat-edu-border: #D4C2F7;
+
+      --font-scale: 1;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --shadow-soft: 0 8px 24px rgba(31, 41, 55, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg-soft-green) 0%, var(--bg-cream) 38%, var(--bg-sky) 100%);
+      color: var(--text-main);
+      font-size: calc(18px * var(--font-scale));
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 18px 56px;
+    }
+
+    /* 상단 유틸리티 바 */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .btn-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 50px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: calc(17px * var(--font-scale));
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .btn-pill:hover {
+      transform: translateY(-1px);
+      background: #F4FBF6;
+    }
+
+    .font-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+    }
+
+    .font-label {
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 700;
+      color: var(--text-sub);
+      padding-left: 6px;
+    }
+
+    .font-btn {
+      min-width: 44px;
+      min-height: 40px;
+      border: none;
+      border-radius: 999px;
+      background: #EEF4F0;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .font-btn.active {
+      background: #2E7D5B;
+      color: #FFFFFF;
+    }
+
+    /* 메인 헤더 카드 */
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+      border: 3px solid #CFE8D8;
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 24px;
+    }
+
+    .hero-deco {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .deco-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-warm);
+      border: 1.5px solid #F2DFAC;
+      color: #6B4E08;
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 700;
+    }
+
+    .hero-title {
+      margin: 0 0 8px;
+      font-size: calc(34px * var(--font-scale));
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #163A2B;
+    }
+
+    .hero-subtitle {
+      margin: 0 0 8px;
+      font-size: calc(22px * var(--font-scale));
+      font-weight: 700;
+      color: #256D85;
+    }
+
+    .hero-desc {
+      margin: 0;
+      font-size: calc(19px * var(--font-scale));
+      color: var(--text-sub);
+    }
+
+    /* 4대 카테고리 큰 버튼 그리드 */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 680px) {
+      .category-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cat-big-btn {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      width: 100%;
+      text-align: left;
+      padding: 22px 22px;
+      border-radius: var(--radius-lg);
+      border: 3px solid transparent;
+      background: var(--surface);
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      font-family: inherit;
+    }
+
+    .cat-big-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(31, 41, 55, 0.1);
+    }
+
+    .cat-big-btn.med {
+      background: var(--cat-med-bg);
+      border-color: var(--cat-med-border);
+    }
+    .cat-big-btn.trans {
+      background: var(--cat-trans-bg);
+      border-color: var(--cat-trans-border);
+    }
+    .cat-big-btn.shop {
+      background: var(--cat-shop-bg);
+      border-color: var(--cat-shop-border);
+    }
+    .cat-big-btn.edu {
+      background: var(--cat-edu-bg);
+      border-color: var(--cat-edu-border);
+    }
+
+    .cat-big-btn.selected {
+      outline: 4px solid #1F2937;
+    }
+
+    .cat-icon-box {
+      flex-shrink: 0;
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .cat-btn-text h2 {
+      margin: 0 0 4px;
+      font-size: calc(25px * var(--font-scale));
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .cat-btn-text p {
+      margin: 0;
+      font-size: calc(17px * var(--font-scale));
+      color: var(--text-sub);
+      font-weight: 500;
+    }
+
+    /* 지도 섹션 */
+    .map-section {
+      background: var(--surface);
+      border: 3px solid #C8E2F4;
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 28px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: calc(24px * var(--font-scale));
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .illust-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: calc(15px * var(--font-scale));
+      color: #2B4C3B;
+      background: #F3FAF5;
+      padding: 8px 14px;
+      border-radius: 14px;
+      border: 1.5px dashed #A9D5BA;
+    }
+
+    .map-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .map-filter-chip {
+      min-height: 44px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 2px solid #CBD5E1;
+      background: #FFFFFF;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .map-filter-chip.active {
+      background: #1F2937;
+      color: #FFFFFF;
+      border-color: #1F2937;
+    }
+
+    #chilgok-map {
+      width: 100%;
+      height: 440px;
+      border-radius: var(--radius-md);
+      border: 2px solid #BFD9EC;
+      z-index: 1;
+    }
+
+    @media (max-width: 680px) {
+      #chilgok-map {
+        height: 350px;
+      }
+    }
+
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1.5px solid #EEF2F6;
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 700;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    }
+
+    .line-sample {
+      width: 22px;
+      height: 5px;
+      border-radius: 4px;
+      background: #2575D8;
+      display: inline-block;
+    }
+
+    /* 상세 목록 섹션 */
+    .detail-section {
+      background: var(--surface);
+      border: 3px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 22px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .detail-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 18px;
+    }
+
+    .detail-banner.med { background: var(--cat-med-bg); border: 2px solid var(--cat-med-border); }
+    .detail-banner.trans { background: var(--cat-trans-bg); border: 2px solid var(--cat-trans-border); }
+    .detail-banner.shop { background: var(--cat-shop-bg); border: 2px solid var(--cat-shop-border); }
+    .detail-banner.edu { background: var(--cat-edu-bg); border: 2px solid var(--cat-edu-border); }
+
+    .detail-banner h3 {
+      margin: 0;
+      font-size: calc(25px * var(--font-scale));
+      font-weight: 800;
+    }
+
+    .search-box-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 56px;
+      padding: 12px 20px;
+      border-radius: 16px;
+      border: 2.5px solid #B8CFC2;
+      background: #FAFDFB;
+      font-family: inherit;
+      font-size: calc(19px * var(--font-scale));
+      color: var(--text-main);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #2E7D5B;
+      background: #FFFFFF;
+    }
+
+    .subcat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .subcat-btn {
+      min-height: 46px;
+      padding: 8px 18px;
+      border-radius: 14px;
+      border: 2px solid #CBD5E1;
+      background: #F8FAFC;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: calc(17px * var(--font-scale));
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .subcat-btn.active {
+      background: #2E7D5B;
+      color: #FFFFFF;
+      border-color: #2E7D5B;
+    }
+
+    .place-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .place-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .place-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: 2px solid #E2E8F0;
+      background: #FFFFFF;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .place-card.highlighted {
+      border-color: #1F2937;
+      background: #FFFDF4;
+      box-shadow: 0 0 0 3px rgba(212, 147, 10, 0.25);
+    }
+
+    .place-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .place-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .badge-med { background: var(--cat-med-bg); color: #B82E5B; border: 1px solid var(--cat-med-border); }
+    .badge-trans { background: var(--cat-trans-bg); color: #1955A6; border: 1px solid var(--cat-trans-border); }
+    .badge-shop { background: var(--cat-shop-bg); color: #966600; border: 1px solid var(--cat-shop-border); }
+    .badge-edu { background: var(--cat-edu-bg); color: #583599; border: 1px solid var(--cat-edu-border); }
+
+    .place-name {
+      margin: 0;
+      font-size: calc(21px * var(--font-scale));
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .place-addr {
+      margin: 6px 0 0;
+      font-size: calc(16px * var(--font-scale));
+      color: var(--text-sub);
+    }
+
+    .place-desc {
+      margin: 8px 0 0;
+      font-size: calc(17px * var(--font-scale));
+      color: #2D3748;
+      background: #F8FAFC;
+      padding: 10px 12px;
+      border-radius: 12px;
+    }
+
+    .place-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-map-focus {
+      flex: 1 1 130px;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 2px solid #94A3B8;
+      background: #FFFFFF;
+      color: #1E293B;
+      font-family: inherit;
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-map-focus:hover {
+      background: #F1F5F9;
+    }
+
+    .btn-naver {
+      flex: 1.3 1 170px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: none;
+      background: #03C75A;
+      color: #FFFFFF;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-naver:hover {
+      background: #02B150;
+    }
+
+    .empty-box {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 36px 20px;
+      background: #F9FAFB;
+      border-radius: 16px;
+      font-size: calc(19px * var(--font-scale));
+      color: var(--text-sub);
+    }
+
+    .notice-footer {
+      margin-top: 22px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: var(--surface-warm);
+      border: 1.5px solid #EFE0B6;
+      font-size: calc(15px * var(--font-scale));
+      color: #5C4918;
+    }
+
+    /* Leaflet 팝업 글씨 크기 보정 */
+    .leaflet-popup-content {
+      font-family: 'Noto Sans KR', sans-serif !important;
+      font-size: 15px !important;
+      line-height: 1.45 !important;
+      margin: 12px 14px !important;
+    }
+    .popup-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .popup-sub {
+      color: #4B5563;
+      margin-bottom: 8px;
+    }
+    .popup-link {
+      display: inline-block;
+      background: #03C75A;
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 상단 바: 첫 화면 복귀 + 글씨 크기 조절 -->
+    <div class="topbar">
+      <button type="button" class="btn-pill" id="homeBtn" onclick="resetToHome()">
+        🏠 첫 화면으로 돌아가기
+      </button>
+
+      <div class="font-controls" role="group" aria-label="글씨 크기 선택">
+        <span class="font-label">글씨 크기</span>
+        <button type="button" class="font-btn active" data-scale="1" onclick="setFontScale(1, this)">보통</button>
+        <button type="button" class="font-btn" data-scale="1.15" onclick="setFontScale(1.15, this)">크게</button>
+        <button type="button" class="font-btn" data-scale="1.3" onclick="setFontScale(1.3, this)">아주 크게</button>
+      </div>
+    </div>
+
+    <!-- 메인 상단 안내 -->
+    <header class="hero-card">
+      <div class="hero-deco" aria-hidden="true">
+        <span class="deco-chip">🌿 칠곡 1·2·3지구 안내</span>
+        <span class="deco-chip">🏥 병원 · 교통 · 장보기</span>
+        <span class="deco-chip">😊 큰 글씨 간편 보기</span>
+      </div>
+      <h1 class="hero-title">우리 동네 칠곡 생활정보 안내</h1>
+      <p class="hero-subtitle">처음 방문해도 걱정 없어요!</p>
+      <p class="hero-desc">병원부터 교통, 쇼핑까지 한눈에 확인하세요.</p>
+    </header>
+
+    <!-- 4대 카테고리 큰 버튼 -->
+    <section aria-label="주요 카테고리 선택">
+      <div class="category-grid">
+        <button type="button" class="cat-big-btn med selected" id="catBtn-med" onclick="selectCategory('med', true)">
+          <div class="cat-icon-box" aria-hidden="true">🏥</div>
+          <div class="cat-btn-text">
+            <h2>① 병원 · 약국</h2>
+            <p>종합병원, 의원, 약국 위치 확인</p>
+          </div>
+        </button>
+
+        <button type="button" class="cat-big-btn trans" id="catBtn-trans" onclick="selectCategory('trans', true)">
+          <div class="cat-icon-box" aria-hidden="true">🚇</div>
+          <div class="cat-btn-text">
+            <h2>② 지하철 · 버스정류장</h2>
+            <p>도시철도 3호선 역과 주요 정류장</p>
+          </div>
+        </button>
+
+        <button type="button" class="cat-big-btn shop" id="catBtn-shop" onclick="selectCategory('shop', true)">
+          <div class="cat-icon-box" aria-hidden="true">🛒</div>
+          <div class="cat-btn-text">
+            <h2>③ 백화점 · 시장</h2>
+            <p>쇼핑몰, 대형마트, 전통시장 안내</p>
+          </div>
+        </button>
+
+        <button type="button" class="cat-big-btn edu" id="catBtn-edu" onclick="selectCategory('edu', true)">
+          <div class="cat-icon-box" aria-hidden="true">🏫</div>
+          <div class="cat-btn-text">
+            <h2>④ 학교</h2>
+            <p>초등학교, 중학교, 고등학교, 대학교</p>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 실제 도로 지도 (OpenStreetMap + Leaflet) -->
+    <section class="map-section" id="mapSection" aria-label="칠곡 지역 지도">
+      <div class="section-head">
+        <h2 class="section-title">🗺️ 칠곡 1·2·3지구 실제 도로 지도</h2>
+        <div class="illust-strip" aria-hidden="true">
+          <span>🌳 팔거천 산책길</span>
+          <span>🏥 병원·약국</span>
+          <span>🏢 건물·도로</span>
+          <span>💊 약국</span>
+        </div>
+      </div>
+
+      <div class="map-filter-bar" role="group" aria-label="지도 표시 카테고리 필터">
+        <button type="button" class="map-filter-chip active" data-mapfilter="all" onclick="setMapFilter('all', this)">전체 보기</button>
+        <button type="button" class="map-filter-chip" data-mapfilter="med" onclick="setMapFilter('med', this)">💗 병원 · 약국</button>
+        <button type="button" class="map-filter-chip" data-mapfilter="trans" onclick="setMapFilter('trans', this)">💙 지하철 · 버스정류장</button>
+        <button type="button" class="map-filter-chip" data-mapfilter="shop" onclick="setMapFilter('shop', this)">💛 백화점 · 시장</button>
+        <button type="button" class="map-filter-chip" data-mapfilter="edu" onclick="setMapFilter('edu', this)">💜 학교</button>
+      </div>
+
+      <div id="chilgok-map"></div>
+
+      <div class="map-legend">
+        <span class="legend-item"><span class="dot" style="background:#E95D88;"></span> 병원 · 약국</span>
+        <span class="legend-item"><span class="dot" style="background:#2575D8;"></span> 지하철 · 버스정류장</span>
+        <span class="legend-item"><span class="dot" style="background:#D4930A;"></span> 백화점 · 시장</span>
+        <span class="legend-item"><span class="dot" style="background:#7E57C2;"></span> 학교</span>
+        <span class="legend-item"><span class="line-sample"></span> 대구 도시철도 3호선 기준 연결선</span>
+      </div>
+    </section>
+
+    <!-- 카테고리별 상세 목록 및 검색 -->
+    <section class="detail-section" id="detailSection" aria-label="카테고리별 상세 시설 목록">
+      <div class="detail-banner med" id="detailBanner">
+        <h3 id="detailTitle">🏥 ① 병원 · 약국 안내</h3>
+        <span id="detailCount" style="font-weight:700;">총 0곳</span>
+      </div>
+
+      <div class="search-box-wrap">
+        <input
+          type="search"
+          id="searchInput"
+          class="search-input"
+          placeholder="찾으시는 이름이나 동네(예: 칠곡경대병원, 동천역, 시장, 약국)를 입력하세요"
+          oninput="renderPlaces()"
+        />
+      </div>
+
+      <div class="subcat-tabs" id="subcatTabs" role="group" aria-label="세부 구분"></div>
+
+      <div class="place-list" id="placeList"></div>
+
+      <div class="notice-footer">
+        ※ 확인된 공식 위치와 주소 기준으로 안내하며, 운영시간·노선 세부사항은 방문 전 네이버 지도 또는 해당 기관 안내를 함께 확인해 주세요.
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // 확인된 좌표 및 주소 기반 칠곡 1·2·3지구 생활정보 데이터
+    const PLACES = [
+      // ① 병원 · 약국 (분홍색 계열)
+      {
+        id: 'med-1',
+        cat: 'med',
+        subcat: '종합병원',
+        name: '칠곡경북대학교병원',
+        area: '칠곡3지구 (학정동)',
+        address: '대구광역시 북구 호국로 807',
+        desc: '대구 북구 지역의 대표적인 대학병원급 종합병원입니다.',
+        lat: 35.9598,
+        lng: 128.5665
+      },
+      {
+        id: 'med-2',
+        cat: 'med',
+        subcat: '종합병원',
+        name: '대구가톨릭대학교 칠곡가톨릭병원',
+        area: '칠곡1지구 (관음동)',
+        address: '대구광역시 북구 칠곡중앙대로 540',
+        desc: '칠곡중앙대로 인근에 위치한 종합병원입니다.',
+        lat: 35.9367,
+        lng: 128.5558
+      },
+      {
+        id: 'med-3',
+        cat: 'med',
+        subcat: '일반병원·의원',
+        name: '동천동 보건지소',
+        area: '칠곡3지구 (동천동)',
+        address: '대구광역시 북구 동천로 134',
+        desc: '지역 주민 건강상담 및 기본 진료 서비스를 지원하는 공공보건시설입니다.',
+        lat: 35.9438,
+        lng: 128.5566
+      },
+      {
+        id: 'med-4',
+        cat: 'med',
+        subcat: '일반병원·의원',
+        name: '태전1동 보건지소',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 학정로 240',
+        desc: '태전·칠곡1지구 생활권에서 이용하기 편한 보건지소입니다.',
+        lat: 35.9254,
+        lng: 128.5468
+      },
+      {
+        id: 'med-5',
+        cat: 'med',
+        subcat: '약국',
+        name: '칠곡경대병원 앞 문전약국권 (호국로)',
+        area: '칠곡3지구 (학정동)',
+        address: '대구광역시 북구 호국로 807 일대',
+        desc: '칠곡경북대학교병원 방문 후 처방전 조제 및 의약품 상담이 편리한 구역입니다.',
+        lat: 35.9582,
+        lng: 128.5656
+      },
+      {
+        id: 'med-6',
+        cat: 'med',
+        subcat: '약국',
+        name: '칠곡운암역 인근 약국거리',
+        area: '칠곡3지구 (읍내동)',
+        address: '대구광역시 북구 구암로 59 일대',
+        desc: '칠곡운암역 및 중심상가 주변에 여러 약국이 모여 있어 찾기 쉽습니다.',
+        lat: 35.9446,
+        lng: 128.5535
+      },
+
+      // ② 지하철 · 버스정류장 (파란색 계열)
+      {
+        id: 'trans-1',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '칠곡경대병원역 (도시철도 3호선)',
+        area: '칠곡3지구 북측 (학정동)',
+        address: '대구광역시 북구 호국로 795',
+        desc: '도시철도 3호선 북쪽 종착역으로 칠곡경북대학교병원과 가깝습니다.',
+        lat: 35.9577,
+        lng: 128.5655
+      },
+      {
+        id: 'trans-2',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '학정역 (도시철도 3호선)',
+        area: '칠곡3지구 (학정동)',
+        address: '대구광역시 북구 학정로 498',
+        desc: '학정동과 칠곡3지구 주거지역에서 이용하는 도시철도 3호선 역입니다.',
+        lat: 35.9498,
+        lng: 128.5625
+      },
+      {
+        id: 'trans-3',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '팔거역 (도시철도 3호선)',
+        area: '칠곡3지구 (동천동)',
+        address: '대구광역시 북구 팔거천동로 204',
+        desc: '팔거천 인근에 위치한 도시철도 3호선 역입니다.',
+        lat: 35.9448,
+        lng: 128.5588
+      },
+      {
+        id: 'trans-4',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '동천역 (도시철도 3호선)',
+        area: '칠곡3지구 중심 (동천동)',
+        address: '대구광역시 북구 동천로 146',
+        desc: '칠곡3지구 중심 생활권 및 동천동과 연결되는 도시철도 3호선 역입니다.',
+        lat: 35.9412,
+        lng: 128.5564
+      },
+      {
+        id: 'trans-5',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '칠곡운암역 (도시철도 3호선)',
+        area: '칠곡2·3지구 경계 (읍내동)',
+        address: '대구광역시 북구 구암로 59',
+        desc: '칠곡 중심상권 및 주요 버스 환승이 이루어지는 도시철도 3호선 역입니다.',
+        lat: 35.9344,
+        lng: 128.5535
+      },
+      {
+        id: 'trans-6',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '구암역 (도시철도 3호선)',
+        area: '칠곡2지구 남측 (구암동)',
+        address: '대구광역시 북구 칠곡중앙대로 375',
+        desc: '칠곡2지구 남쪽과 북부 방면 이동 시 이용하는 도시철도 3호선 역입니다.',
+        lat: 35.9255,
+        lng: 128.5532
+      },
+      {
+        id: 'trans-7',
+        cat: 'trans',
+        subcat: '지하철역',
+        name: '태전역 (도시철도 3호선)',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 태전로 106',
+        desc: '태전동 및 칠곡1지구 생활권에서 이용하는 도시철도 3호선 역입니다.',
+        lat: 35.9182,
+        lng: 128.5466
+      },
+      {
+        id: 'trans-8',
+        cat: 'trans',
+        subcat: '버스정류장',
+        name: '칠곡운암역 건너 버스정류장',
+        area: '칠곡2·3지구 (읍내동)',
+        address: '대구광역시 북구 구암로 일대',
+        desc: '도시철도 3호선 칠곡운암역과 연계되는 주요 시내버스 정류장 권역입니다.',
+        lat: 35.9349,
+        lng: 128.5522
+      },
+      {
+        id: 'trans-9',
+        cat: 'trans',
+        subcat: '버스정류장',
+        name: '칠곡경대병원역 버스정류장',
+        area: '칠곡3지구 (학정동)',
+        address: '대구광역시 북구 호국로 일대',
+        desc: '병원 방문객과 지역 주민이 자주 이용하는 호국로 선상 정류장 권역입니다.',
+        lat: 35.9571,
+        lng: 128.5646
+      },
+
+      // ③ 백화점 · 시장 (노란색 계열)
+      {
+        id: 'shop-1',
+        cat: 'shop',
+        subcat: '전통시장',
+        name: '칠곡시장',
+        area: '칠곡2지구 (읍내동)',
+        address: '대구광역시 북구 동천로24길 33',
+        desc: '신선한 식재료, 반찬, 의류 등을 살 수 있는 칠곡 대표 전통시장입니다.',
+        lat: 35.9379,
+        lng: 128.5542
+      },
+      {
+        id: 'shop-2',
+        cat: 'shop',
+        subcat: '전통시장',
+        name: '태전중앙시장',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 매전로 55',
+        desc: '칠곡1지구 태전동 주민들이 일상 장보기로 자주 찾는 전통시장입니다.',
+        lat: 35.9195,
+        lng: 128.5435
+      },
+      {
+        id: 'shop-3',
+        cat: 'shop',
+        subcat: '백화점·쇼핑시설',
+        name: '홈플러스 대구칠곡점',
+        area: '칠곡2지구 (읍내동)',
+        address: '대구광역시 북구 동천로 125',
+        desc: '식품·생활용품 쇼핑과 편의시설 이용이 편리한 대형마트입니다.',
+        lat: 35.9398,
+        lng: 128.5536
+      },
+      {
+        id: 'shop-4',
+        cat: 'shop',
+        subcat: '백화점·쇼핑시설',
+        name: 'NC아울렛 엑스코점(참고: 북구 쇼핑거점)',
+        area: '대구 북구 검단·산격 방면',
+        address: '대구광역시 북구 엑스코로 10',
+        desc: '의류·잡화 쇼핑이 가능한 북구 지역 쇼핑시설입니다.',
+        lat: 35.9198,
+        lng: 128.6064
+      },
+
+      // ④ 학교 (보라색 계열)
+      {
+        id: 'edu-1',
+        cat: 'edu',
+        subcat: '초등학교',
+        name: '대구동천초등학교',
+        area: '칠곡3지구 (동천동)',
+        address: '대구광역시 북구 동천로 130',
+        desc: '칠곡3지구 동천동 중심에 위치한 초등학교입니다.',
+        lat: 35.9426,
+        lng: 128.5554
+      },
+      {
+        id: 'edu-2',
+        cat: 'edu',
+        subcat: '초등학교',
+        name: '대구태전초등학교',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 태전로 98',
+        desc: '칠곡1지구 태전역 인근에 위치한 초등학교입니다.',
+        lat: 35.9173,
+        lng: 128.5453
+      },
+      {
+        id: 'edu-3',
+        cat: 'edu',
+        subcat: '중학교',
+        name: '칠곡중학교',
+        area: '칠곡2지구 (읍내동)',
+        address: '대구광역시 북구 구암로 65',
+        desc: '칠곡운암역 인근에 자리한 중학교입니다.',
+        lat: 35.9361,
+        lng: 128.5518
+      },
+      {
+        id: 'edu-4',
+        cat: 'edu',
+        subcat: '고등학교',
+        name: '강북고등학교',
+        area: '칠곡3지구 (동천동)',
+        address: '대구광역시 북구 팔거천동로 215',
+        desc: '팔거역 인근 칠곡3지구에 위치한 고등학교입니다.',
+        lat: 35.9462,
+        lng: 128.5608
+      },
+      {
+        id: 'edu-5',
+        cat: 'edu',
+        subcat: '고등학교',
+        name: '대구보건고등학교',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 태전로 141',
+        desc: '칠곡1지구 태전동에 위치한 고등학교입니다.',
+        lat: 35.9212,
+        lng: 128.5489
+      },
+      {
+        id: 'edu-6',
+        cat: 'edu',
+        subcat: '대학교',
+        name: '대구과학대학교',
+        area: '칠곡2지구 (태전동)',
+        address: '대구광역시 북구 영송로 47',
+        desc: '칠곡 지역에 위치한 전문대학 캠퍼스입니다.',
+        lat: 35.9288,
+        lng: 128.5452
+      },
+      {
+        id: 'edu-7',
+        cat: 'edu',
+        subcat: '대학교',
+        name: '대구보건대학교',
+        area: '칠곡1지구 (태전동)',
+        address: '대구광역시 북구 영송로 15',
+        desc: '보건·의료 분야 특성화 교육을 운영하는 대학교입니다.',
+        lat: 35.9245,
+        lng: 128.5442
+      }
+    ];
+
+    const CAT_META = {
+      med: {
+        label: '① 병원 · 약국',
+        color: '#E95D88',
+        badgeClass: 'badge-med',
+        bannerClass: 'med',
+        subcats: ['전체', '종합병원', '일반병원·의원', '약국']
+      },
+      trans: {
+        label: '② 지하철 · 버스정류장',
+        color: '#2575D8',
+        badgeClass: 'badge-trans',
+        bannerClass: 'trans',
+        subcats: ['전체', '지하철역', '버스정류장']
+      },
+      shop: {
+        label: '③ 백화점 · 시장',
+        color: '#D4930A',
+        badgeClass: 'badge-shop',
+        bannerClass: 'shop',
+        subcats: ['전체', '전통시장', '백화점·쇼핑시설']
+      },
+      edu: {
+        label: '④ 학교',
+        color: '#7E57C2',
+        badgeClass: 'badge-edu',
+        bannerClass: 'edu',
+        subcats: ['전체', '초등학교', '중학교', '고등학교', '대학교']
+      }
+    };
+
+    let currentCat = 'med';
+    let currentSubcat = '전체';
+    let currentMapFilter = 'all';
+    let highlightedId = null;
+
+    let map;
+    let markerLayer;
+    const markerById = {};
+
+    function getNaverMapUrl(name) {
+      return 'https://map.naver.com/p/search/' + encodeURIComponent(name);
+    }
+
+    function createColoredMarkerIcon(color) {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="44" viewBox="0 0 34 44">
+          <path d="M17 1C8.7 1 2 7.7 2 16c0 11.2 15 26.5 15 26.5S32 27.2 32 16C32 7.7 25.3 1 17 1z"
+                fill="${color}" stroke="#FFFFFF" stroke-width="3"/>
+          <circle cx="17" cy="16" r="6" fill="#FFFFFF"/>
+        </svg>`;
+      return L.divIcon({
+        className: 'custom-pin-icon',
+        html: svg,
+        iconSize: [34, 44],
+        iconAnchor: [17, 42],
+        popupAnchor: [0, -38]
+      });
+    }
+
+    function initMap() {
+      // 칠곡 1·2·3지구가 모두 포함되도록 중심 및 줌 설정
+      map = L.map('chilgok-map', {
+        center: [35.9385, 128.5555],
+        zoom: 13,
+        minZoom: 12,
+        maxZoom: 18
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // 도시철도 3호선 칠곡 구간 연결선 (칠곡경대병원역 -> 학정역 -> 팔거역 -> 동천역 -> 칠곡운암역 -> 구암역 -> 태전역)
+      const line3Coords = [
+        [35.9577, 128.5655],
+        [35.9498, 128.5625],
+        [35.9448, 128.5588],
+        [35.9412, 128.5564],
+        [35.9344, 128.5535],
+        [35.9255, 128.5532],
+        [35.9182, 128.5466]
+      ];
+      L.polyline(line3Coords, {
+        color: '#2575D8',
+        weight: 5,
+        opacity: 0.8,
+        dashArray: '8, 6'
+      }).addTo(map).bindTooltip('대구 도시철도 3호선 칠곡 구간', { sticky: true });
+
+      markerLayer = L.layerGroup().addTo(map);
+      refreshMapMarkers();
+    }
+
+    function refreshMapMarkers() {
+      if (!markerLayer) return;
+      markerLayer.clearLayers();
+      Object.keys(markerById).forEach(k => delete markerById[k]);
+
+      const filtered = PLACES.filter(p => currentMapFilter === 'all' || p.cat === currentMapFilter);
+
+      filtered.forEach(place => {
+        const meta = CAT_META[place.cat];
+        const marker = L.marker([place.lat, place.lng], {
+          icon: createColoredMarkerIcon(meta.color)
+        });
+
+        const popupHtml = `
+          <div class="popup-title">${escapeHtml(place.name)}</div>
+          <div class="popup-sub">${escapeHtml(place.subcat)} · ${escapeHtml(place.area)}<br/>${escapeHtml(place.address)}</div>
+          <a class="popup-link" href="${getNaverMapUrl(place.name)}" target="_blank" rel="noopener noreferrer">
+            네이버 지도에서 위치 확인
+          </a>
+        `;
+
+        marker.bindPopup(popupHtml);
+        marker.on('click', () => {
+          highlightedId = place.id;
+          if (currentCat !== place.cat) {
+            currentCat = place.cat;
+            currentSubcat = '전체';
+            syncCategoryButtons();
+            renderSubcatTabs();
+          }
+          renderPlaces();
+        });
+
+        marker.addTo(markerLayer);
+        markerById[place.id] = marker;
+      });
+    }
+
+    function setMapFilter(filterKey, btnEl) {
+      currentMapFilter = filterKey;
+      document.querySelectorAll('.map-filter-chip').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      refreshMapMarkers();
+    }
+
+    function selectCategory(catKey, scrollToDetail = false) {
+      currentCat = catKey;
+      currentSubcat = '전체';
+      highlightedId = null;
+
+      syncCategoryButtons();
+      renderSubcatTabs();
+      renderPlaces();
+
+      // 지도도 해당 카테고리에 맞춰 표시
+      currentMapFilter = catKey;
+      document.querySelectorAll('.map-filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mapfilter === catKey);
+      });
+      refreshMapMarkers();
+
+      if (scrollToDetail) {
+        document.getElementById('detailSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function syncCategoryButtons() {
+      ['med', 'trans', 'shop', 'edu'].forEach(key => {
+        const el = document.getElementById('catBtn-' + key);
+        if (el) el.classList.toggle('selected', key === currentCat);
+      });
+
+      const meta = CAT_META[currentCat];
+      const banner = document.getElementById('detailBanner');
+      banner.className = 'detail-banner ' + meta.bannerClass;
+      document.getElementById('detailTitle').textContent = meta.label + ' 안내';
+    }
+
+    function renderSubcatTabs() {
+      const meta = CAT_META[currentCat];
+      const tabsWrap = document.getElementById('subcatTabs');
+      tabsWrap.innerHTML = '';
+
+      meta.subcats.forEach(sub => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'subcat-btn' + (currentSubcat === sub ? ' active' : '');
+        btn.textContent = sub;
+        btn.onclick = () => {
+          currentSubcat = sub;
+          renderSubcatTabs();
+          renderPlaces();
+        };
+        tabsWrap.appendChild(btn);
+      });
+    }
+
+    function renderPlaces() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const meta = CAT_META[currentCat];
+
+      const list = PLACES.filter(item => {
+        if (item.cat !== currentCat) return false;
+        if (currentSubcat !== '전체' && item.subcat !== currentSubcat) return false;
+        if (!query) return true;
+        return (
+          item.name.toLowerCase().includes(query) ||
+          item.address.toLowerCase().includes(query) ||
+          item.area.toLowerCase().includes(query) ||
+          item.desc.toLowerCase().includes(query) ||
+          item.subcat.toLowerCase().includes(query)
+        );
+      });
+
+      document.getElementById('detailCount').textContent = `총 ${list.length}곳`;
+
+      const container = document.getElementById('placeList');
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-box">
+            검색 조건에 맞는 시설이 없습니다.<br/>
+            검색어를 지우거나 다른 구분을 눌러보세요.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(place => {
+        const isHi = place.id === highlightedId ? ' highlighted' : '';
+        return `
+          <article class="place-card${isHi}" id="card-${place.id}">
+            <div>
+              <div class="place-top">
+                <div>
+                  <span class="place-badge ${meta.badgeClass}">${escapeHtml(place.subcat)} · ${escapeHtml(place.area)}</span>
+                  <h4 class="place-name">${escapeHtml(place.name)}</h4>
+                </div>
+              </div>
+              <p class="place-addr">📍 ${escapeHtml(place.address)}</p>
+              <p class="place-desc">${escapeHtml(place.desc)}</p>
+            </div>
+            <div class="place-actions">
+              <button type="button" class="btn-map-focus" onclick="focusPlaceOnMap('${place.id}')">
+                지도에서 보기
+              </button>
+              <a class="btn-naver" href="${getNaverMapUrl(place.name)}" target="_blank" rel="noopener noreferrer">
+                네이버 지도에서 위치 확인
+              </a>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function focusPlaceOnMap(placeId) {
+      const place = PLACES.find(p => p.id === placeId);
+      if (!place) return;
+      highlightedId = placeId;
+
+      if (currentMapFilter !== 'all' && currentMapFilter !== place.cat) {
+        currentMapFilter = 'all';
+        document.querySelectorAll('.map-filter-chip').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mapfilter === 'all');
+        });
+        refreshMapMarkers();
+      }
+
+      renderPlaces();
+      document.getElementById('mapSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      setTimeout(() => {
+        map.setView([place.lat, place.lng], 16, { animate: true });
+        if (markerById[placeId]) {
+          markerById[placeId].openPopup();
+        }
+      }, 250);
+    }
+
+    function setFontScale(scale, btnEl) {
+      document.documentElement.style.setProperty('--font-scale', scale);
+      document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      if (map) {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+    }
+
+    function resetToHome() {
+      document.getElementById('searchInput').value = '';
+      currentMapFilter = 'all';
+      document.querySelectorAll('.map-filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mapfilter === 'all');
+      });
+      refreshMapMarkers();
+      selectCategory('med', false);
+      if (map) {
+        map.setView([35.9385, 128.5555], 13, { animate: true });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      syncCategoryButtons();
+      renderSubcatTabs();
+      renderPlaces();
+    });
+  </script>
+</body>
+</html>
